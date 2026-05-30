@@ -1,0 +1,83 @@
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import nltk
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+from wordcloud import WordCloud 
+import re
+nltk.download("stopwords")
+nltk.download("punkt")
+df = pd.read_csv("twitter_training.csv")
+df.head()
+df.shape
+df.columns
+df.info()
+df.isnull().sum()
+df.columns=['ID','Topic','Sentiment','Text']
+df.head()
+df.isnull().sum()
+df.dropna(inplace=True)
+df.isnull().sum()
+#creating cleaning function to clean text 
+
+stop_words =set(stopwords.words('english'))
+
+def clean_text(text):
+    text=text.lower()
+    text= re.sub( r'http\S+','',text)
+    text = re.sub(r'[^a-zA-Z\s]','',text)
+    words = word_tokenize(text)
+    words = [word for word in words if word not in stop_words]
+    return"".join(words)
+nltk.download('punkt_tab')
+
+df['Clean_Text']=df['Text'].apply(clean_text)
+df[['Text','Clean_Text']].head()
+df["Sentiment"].value_counts()
+plt.figure(figsize=(6,4))
+sns.countplot(x=df['Sentiment'])
+plt.title("Sentiment Distribution")
+plt.show()
+positive_df= df[df['Sentiment']=="Positive"]['Clean_Text'].dropna()
+positive_text=" ".join(positive_df.astype(str))
+print(positive_text[:100])
+positive_wc = WordCloud(width=800,height=400,background_color='white').generate(positive_text)
+plt.figure(figsize=(10,5))
+plt.imshow(positive_wc,interpolation='bilinear')
+plt.axis('off')
+plt.title("Positive Word Cloud")
+plt.show()
+
+negative_df = df[df["Sentiment"]=="Negative"]["Clean_Text"].dropna()
+negative_text=" ".join(negative_df.astype(str))
+negative_wc=WordCloud(width=800,height=400,background_color="white").generate(negative_text)
+plt.figure(figsize=(10,5))
+plt.imshow(negative_wc,interpolation='bilinear')
+plt.axis("off")
+plt.title("Negative Word Cloud")
+plt.show()
+neutral_df=df[df['Sentiment']=="Neutral"]["Clean_Text"].dropna()
+neutral_text=" ".join(neutral_df.astype(str))
+neutral_wc= WordCloud(width=800,height=400,background_color='white').generate(neutral_text)
+plt.figure(figsize=(10,5))
+plt.imshow(neutral_wc,interpolation="bilinear")
+plt.axis("off")
+plt.title("Neutral Word Cloud")
+plt.show()
+print(len(irrelevent_df))
+from collections import Counter 
+all_words = ' '.join(df["Clean_Text"]).split()
+common_words = Counter(all_words).most_common(10)
+common_df=pd.DataFrame(common_words,columns=['Word','Frequency'])
+plt.figure(figsize=(10,5))
+sns.barplot(x='Frequency',y='Word',data=common_df)
+plt.title("Top 10 Common Words")
+plt.show()
+sentiment_counts = df['Sentiment'].value_counts()
+plt.figure(figsize=(6,6))
+plt.pie(sentiment_counts,labels=sentiment_counts.index,autopct='%1.1f%%')
+plt.title("Sentiment Percentage")
+plt.show()
